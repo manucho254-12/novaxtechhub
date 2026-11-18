@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Items | Admin | Novax Tech Hub{% endblock %}
+{% block content %}
+<section class="page-head admin-head">
+  <div class="wrap row-between">
+    <div>
+      <h1>Items in “{{ tab.title }}”</h1>
+      <p class="lead sm">Add members, team photos, cards or anything else that goes in this tab. Image, role and description are all optional.</p>
+      {% include "admin/_nav.html" %}
+    </div>
+    <form method="post" action="{{ url_for('admin_logout') }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-ghost btn-sm" type="submit">Sign out</button></form>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="wrap">
+    <p><a class="back" href="{{ url_for('admin_tabs') }}">Back to tabs</a></p>
+    {% macro item_fields(it=None) %}
+      <label>Name or title</label>
+      <input name="title" maxlength="80" value="{{ it.title if it else '' }}" placeholder="e.g. Jane Wanjiku">
+      <label>Role or subtitle <em>(optional)</em></label>
+      <input name="subtitle" maxlength="80" value="{{ it.subtitle if it else '' }}" placeholder="e.g. Lead designer">
+      <label>Description <em>(optional)</em></label>
+      <textarea name="description" rows="4" maxlength="1200" placeholder="A short bio or description">{{ it.description if it else '' }}</textarea>
+    {% endmacro %}
+    <div class="admin-grid">
+      <form class="panel" method="post" action="{{ url_for('admin_item_new', tab_id=tab.id) }}" enctype="multipart/form-data">
+        <h2 class="h3">Add an item</h2>
+        <p class="meta">Each item can have its own image. Leave out anything you don't need.</p>
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        {{ item_fields() }}
+        <label>Image <em>(optional, PNG/JPG/WEBP up to 5 MB)</em></label>
+        <input name="image" type="file" accept=".png,.jpg,.jpeg,.webp">
+        <button class="btn" type="submit">Add item</button>
+      </form>
+
+      <div class="panel">
+        <h2 class="h3">Items ({{ items|length }})</h2>
+        <p class="meta">Order here is the order on the site.</p>
+        {% if items %}
+        <ul class="adocs tablist">
+          {% for it in items %}
+          <li class="adoc">
+            {% if it.image %}<img class="proj-thumb sq" src="{{ url_for('media_file', filename=it.image) }}" alt="">{% else %}<span class="ext tabbadge">{{ (it.title or '?')[:1] }}</span>{% endif %}
+            <div class="doc-main">
+              <h3>{{ it.title or '(no name)' }}</h3>
+              <p class="meta">{{ it.subtitle or 'No role' }} &nbsp;·&nbsp; {{ 'Has image' if it.image else 'No image' }}</p>
+            </div>
+            <div class="a-actions">
+              <form method="post" action="{{ url_for('admin_item_move', item_id=it.id) }}" class="inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="dir" value="up"><button class="btn btn-sm btn-ghost sq" type="submit" aria-label="Move up" {{ 'disabled' if loop.first }}>↑</button></form>
+              <form method="post" action="{{ url_for('admin_item_move', item_id=it.id) }}" class="inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="dir" value="down"><button class="btn btn-sm btn-ghost sq" type="submit" aria-label="Move down" {{ 'disabled' if loop.last }}>↓</button></form>
+              <button class="btn btn-sm btn-ghost" type="button" data-edit="item-{{ it.id }}">Edit</button>
+              <form method="post" action="{{ url_for('admin_item_delete', item_id=it.id) }}" data-confirm="Delete this item?"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger" type="submit">Delete</button></form>
+            </div>
+            <dialog id="edit-item-{{ it.id }}" class="modal modal-wide">
+              <form method="post" action="{{ url_for('admin_item_edit', item_id=it.id) }}" enctype="multipart/form-data">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                <h3 class="h3">Edit item</h3>
+                {{ item_fields(it) }}
+                <label>Image <em>(upload to replace)</em></label>
+                {% if it.image %}<img class="mini" src="{{ url_for('media_file', filename=it.image) }}" alt="">
+                <label class="check"><input type="checkbox" name="remove_image" value="1"> Remove current image</label>{% endif %}
+                <input name="image" type="file" accept=".png,.jpg,.jpeg,.webp">
+                <div class="actions" style="margin-top:1.1rem"><button class="btn" type="submit">Save changes</button><button class="btn btn-ghost" type="button" data-close>Cancel</button></div>
+              </form>
+            </dialog>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}<div class="empty-state sm"><p>No items yet. Add the first one using the form.</p></div>{% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

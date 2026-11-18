@@ -1,0 +1,37 @@
+{% set items = tab_items(t.id) %}
+{% set bu = t.button_url|ext_url %}
+<section class="section {{ 'tint' if tint }}" id="{{ t.slug }}">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>{{ t.title }}</h2>
+    </div>
+    {% if t.body or t.image or bu %}
+    <div class="box custom-tab {{ 'has-img' if t.image }}">
+      <div class="custom-grid">
+        <div class="box-body rich">
+          {{ t.body|rich }}
+          {% if bu %}<p><a class="btn" href="{{ bu }}" {% if bu.startswith('http') %}target="_blank" rel="noopener"{% endif %}>{{ t.button_label or 'Learn more' }}</a></p>{% endif %}
+        </div>
+        {% if t.image %}<div class="custom-img"><img src="{{ url_for('media_file', filename=t.image) }}" alt="{{ t.title }}" loading="lazy"></div>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% if items %}
+    <div class="grid g3 members {{ 'after-box' if t.body or t.image or bu }}">
+      {% for it in items %}
+      <article class="box member">
+        {% if it.image %}<div class="m-photo"><img src="{{ url_for('media_file', filename=it.image) }}" alt="{{ it.title or t.title }}" loading="lazy"></div>
+        {% elif it.title %}<div class="m-photo ph"><span>{{ it.title[:1] }}</span></div>{% endif %}
+        <div class="box-body">
+          <h3 class="{{ '' if it.title else 'sr' }}">{{ it.title or it.subtitle or t.title }}</h3>
+          {% if it.subtitle %}<p class="m-role">{{ it.subtitle }}</p>{% endif %}
+          {% if it.description %}<p>{{ it.description }}</p>{% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% elif not (t.body or t.image or bu) %}
+    <div class="box"><div class="box-body empty-state flat"><h3>Coming soon</h3><p>This section is being prepared.</p></div></div>
+    {% endif %}
+  </div>
+</section>

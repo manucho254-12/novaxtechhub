@@ -1,0 +1,50 @@
+<section class="section {{ 'tint' if tint }}" id="{{ t.slug }}">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Live work</h2>
+      <p>Websites we've built and continue to maintain, from celebration pages to full e-commerce stores.</p>
+    </div>
+    {% if projects %}
+    <div class="grid g3 projects">
+      {% for p in projects %}
+      {% set people = p.contributors|contrib_list %}
+      <article class="box project">
+        <div class="shot {{ '' if p.image else 'ph' }}">{% if p.image %}<img src="{{ url_for('media_file', filename=p.image) }}" alt="{{ p.title }} website screenshot" loading="lazy">{% else %}<span>{{ p.title[:1] }}</span>{% endif %}</div>
+        <div class="box-body">
+          <p class="status {{ 'soon' if 'soon' in p.status|lower or 'ready' in p.status|lower or 'develop' in p.status|lower }}">{{ p.status }}</p>
+          <h3>{{ p.title }}</h3>
+          <p>{{ p.description }}</p>
+          {% if p.hosting == 'pending' %}<p class="domain"><span>Domain</span> Not hosted yet</p>
+          {% elif p.domain %}<p class="domain"><span>Domain</span> {{ p.domain|host }}</p>{% endif %}
+          {% if people %}<p class="domain"><span>{{ 'Contributor' if people|length == 1 else 'Contributors' }}</span> {{ people|join(', ') }}</p>{% endif %}
+        </div>
+        <div class="box-foot foot-split">
+          {% if p.hosting == 'pending' %}<span class="pending-tag">Developed · awaiting hosting</span>
+          {% elif p.domain %}<a class="link" href="{{ p.domain|ext_url }}" target="_blank" rel="noopener">Visit site</a>
+          {% else %}<span></span>{% endif %}
+          <span class="foot-actions">
+            <a class="btn btn-sm btn-wa" target="_blank" rel="noopener" href="{{ project_wa(p) }}" aria-label="Share {{ p.title }} on WhatsApp" title="Share on WhatsApp">{% include "_wa_icon.html" %}<span>Share</span></a>
+            {% if p.details %}<button class="btn btn-sm btn-ghost" type="button" data-open="project-{{ p.id }}">Details</button>{% endif %}
+          </span>
+        </div>
+        {% if p.details %}
+        <dialog id="project-{{ p.id }}" class="modal modal-wide">
+          <div class="modal-head"><h3 class="h3">{{ p.title }}</h3><button class="ghost-icon static" type="button" data-close aria-label="Close">Close</button></div>
+          {% if p.image %}<img class="modal-shot" src="{{ url_for('media_file', filename=p.image) }}" alt="">{% endif %}
+          <p class="status {{ 'soon' if 'soon' in p.status|lower or 'ready' in p.status|lower or 'develop' in p.status|lower }}">{{ p.status }}</p>
+          <div class="rich">{{ p.details|rich }}</div>
+          <dl class="facts-list">
+            {% if p.hosting == 'pending' %}<div><dt>Domain</dt><dd>Not hosted yet. The project is fully developed and waiting for hosting.</dd></div>
+            {% elif p.domain %}<div><dt>Domain</dt><dd><a href="{{ p.domain|ext_url }}" target="_blank" rel="noopener">{{ p.domain|host }}</a></dd></div>{% endif %}
+            {% if people %}<div><dt>{{ 'Contributor' if people|length == 1 else 'Contributors' }}</dt><dd>{{ people|join(', ') }}</dd></div>{% endif %}
+          </dl>
+        </dialog>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="box"><div class="box-body empty-state flat"><h3>New projects are on the way</h3><p>Check back soon, or message us about your own.</p></div></div>
+    {% endif %}
+  </div>
+</section>

@@ -1,0 +1,14 @@
+{% if reveal %}
+<div class="reveal" role="region" aria-label="Share access">
+  <div>
+    <h2 class="h3">Share access to “{{ reveal.title }}”</h2>
+    <p>The password is saved, encrypted, in the <a href="{{ url_for('admin_passwords') }}">Password Manager</a>, so you can look it up and share it again later. It is also shown here now for convenience.</p>
+    <p class="secret"><span>Password</span><code id="rv-pw">{{ reveal.password }}</code></p>
+  </div>
+  <div class="actions">
+    <button class="btn btn-sm" type="button" data-copy="{{ share_text }}">Copy message</button>
+    <a class="btn btn-sm btn-wa" target="_blank" rel="noopener" href="{{ share_url }}">{% include "_wa_icon.html" %}Share on WhatsApp</a>
+    <a class="btn btn-sm btn-ghost" href="mailto:?subject={{ ('Access to ' ~ reveal.title)|urlencode }}&body={{ share_text|urlencode }}">Share by email</a>
+  </div>
+</div>
+{% endif %}

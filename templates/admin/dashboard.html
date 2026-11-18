@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}Admin | Novax Tech Hub{% endblock %}
+{% block content %}
+<section class="page-head admin-head">
+  <div class="wrap row-between">
+    <div>
+      <h1>Docs admin</h1>
+      <p class="lead sm">Upload documents, set passwords, and manage your logo, profile photo and screenshots.</p>
+      {% include "admin/_nav.html" %}
+    </div>
+    <form method="post" action="{{ url_for('admin_logout') }}">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <button class="btn btn-ghost btn-sm" type="submit">Sign out</button>
+    </form>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="wrap">
+    {% if admin.must_change %}
+    <p class="flash warn">You are using the default admin password. Change it under <a href="#account">Account</a> before going live.</p>
+    {% endif %}
+
+    {% include "admin/_reveal.html" %}
+
+    <div class="stats">
+      <div><b>{{ stats.total }}</b><span>Documents</span></div>
+      <div><b>{{ stats.live }}</b><span>Enabled</span></div>
+      <div><b>{{ stats.total - stats.live }}</b><span>Disabled</span></div>
+      <div><b>{{ stats.views }}</b><span>Unlocked views</span></div>
+      <div><b>{{ stats.downloads }}</b><span>Downloads</span></div>
+    </div>
+
+    <div class="admin-grid">
+      <form class="panel" method="post" action="{{ url_for('admin_upload') }}" enctype="multipart/form-data" id="upload">
+        <h2 class="h3">Upload a document</h2>
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <label for="title">Title</label>
+        <input id="title" name="title" maxlength="140" required placeholder="e.g. Website proposal, Acme Ltd">
+        <label for="description">Short description <em>(optional)</em></label>
+        <input id="description" name="description" maxlength="400" placeholder="What is this document about?">
+        <label for="file">File <em>(PDF, DOC or DOCX, up to 25 MB)</em></label>
+        <label class="drop" for="file"><span data-file-name>Choose a file</span></label>
+        <input id="file" name="file" type="file" accept=".pdf,.doc,.docx" required class="sr">
+        <label for="pw-new">Password for this document</label>
+        <div class="pw-field">
+          <input id="pw-new" name="password" type="text" minlength="4" required autocomplete="off" placeholder="At least 4 characters">
+          <button type="button" class="ghost-icon" data-generate="#pw-new">Generate</button>
+        </div>
+        <label class="check"><input type="checkbox" name="enabled" value="1" checked> Make it available right away</label>
+        <button class="btn" type="submit">Upload document</button>
+      </form>
+
+      <div class="panel" id="library">
+        <h2 class="h3">Library</h2>
+        {% if docs %}
+        <ul class="adocs">
+          {% for d in docs %}
+          <li class="adoc {{ '' if d.enabled else 'off' }}">
+            <span class="ext {{ d.ext[1:] }}">{{ d.ext[1:]|upper }}</span>
+            <div class="doc-main">
+              <h3>{{ d.title }}</h3>
+              <p class="meta">{{ d.size|filesize }} &nbsp;·&nbsp; {{ d.views }} views &nbsp;·&nbsp; {{ d.downloads }} downloads &nbsp;·&nbsp; {{ d.created_at|pretty_date }}</p>
+              <p class="meta"><a href="{{ url_for('doc_page', doc_id=d.id) }}" target="_blank" rel="noopener">/docs/{{ d.id }}</a> &nbsp;·&nbsp; {{ 'Enabled' if d.enabled else 'Disabled' }}</p>
+            </div>
+            <div class="a-actions">
+              <form method="post" action="{{ url_for('admin_toggle', doc_id=d.id) }}">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                <button class="switch {{ 'on' if d.enabled }}" role="switch" aria-checked="{{ 'true' if d.enabled else 'false' }}" title="{{ 'Disable' if d.enabled else 'Enable' }} this document" type="submit">
+                  <i></i><span class="sr">{{ 'Disable' if d.enabled else 'Enable' }}</span>
+                </button>
+              </form>
+              <a class="btn btn-sm btn-wa" target="_blank" rel="noopener" href="{{ doc_wa(d) }}">{% include "_wa_icon.html" %}Share</a>
+              <button class="btn btn-sm btn-ghost" type="button" data-edit="{{ d.id }}">Edit</button>
+              <form method="post" action="{{ url_for('admin_delete', doc_id=d.id) }}" data-confirm="Delete “{{ d.title }}” and its file permanently?">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+              </form>
+            </div>
+
+            <dialog id="edit-{{ d.id }}" class="modal">
+              <form method="post" action="{{ url_for('admin_edit', doc_id=d.id) }}">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                <h3 class="h3">Edit document</h3>
+                <label>Title</label>
+                <input name="title" value="{{ d.title }}" maxlength="140" required>
+                <label>Description</label>
+                <input name="description" value="{{ d.description }}" maxlength="400">
+                <label>New password <em>(leave blank to keep the current one)</em></label>
+                <div class="pw-field">
+                  <input name="password" type="text" minlength="4" autocomplete="off" id="np-{{ d.id }}">
+                  <button type="button" class="ghost-icon" data-generate="#np-{{ d.id }}">Generate</button>
+                </div>
+                <p class="meta">Changing the password signs out everyone who had unlocked this document. It is also saved in the Password Manager.</p>
+                <div class="actions">
+                  <button class="btn" type="submit">Save changes</button>
+                  <button class="btn btn-ghost" type="button" data-close>Cancel</button>
+                </div>
+              </form>
+            </dialog>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="empty-state sm"><p>No documents yet. Upload your first one using the form.</p></div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="panel" id="images" style="margin-top:1.5rem">
+      <h2 class="h3">Site images</h2>
+      <p class="meta">Upload your logo, home photo, profile photo and project screenshots (PNG, JPG or WEBP, up to 5 MB). Changes appear on the home page straight away.</p>
+      <div class="imgs">
+        {% for key, label, hint in slots %}
+        <div class="slot">
+          <h3>{{ label }}</h3>
+          <div class="thumb {{ 'cover' if key.startswith('project-') or key == 'hero' }} {{ 'logo' if key == 'logo' }}">
+            {% if media(key) %}<img src="{{ media(key) }}" alt="{{ label }}">{% elif key == 'logo' %}<img src="{{ url_for('static', filename='img/logo.png') }}" alt="Default logo">{% elif key == 'hero' %}<img src="{{ url_for('static', filename='img/hero.jpg') }}" alt="Default home photo">{% else %}<span>No image yet</span>{% endif %}
+          </div>
+          <p class="meta">{{ hint }}</p>
+          <form method="post" action="{{ url_for('admin_media_upload', key=key) }}" enctype="multipart/form-data">
+            <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+            <input type="file" name="image" accept=".png,.jpg,.jpeg,.webp" required aria-label="Choose {{ label }}">
+            <div class="row"><button class="btn btn-sm" type="submit">{{ 'Replace' if media(key) else 'Upload' }}</button></div>
+          </form>
+          {% if media(key) %}
+          <form method="post" action="{{ url_for('admin_media_remove', key=key) }}" data-confirm="Remove this image?">
+            <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-danger" type="submit">Remove</button>
+          </form>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <form class="panel account" method="post" action="{{ url_for('admin_account') }}" id="account">
+      <h2 class="h3">Account</h2>
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <div class="two">
+        <div><label for="a-user">Username</label><input id="a-user" name="username" value="{{ admin.username }}" autocomplete="username"></div>
+        <div><label for="a-new">New password <em>(optional, 8+ characters)</em></label><input id="a-new" name="new_password" type="password" autocomplete="new-password"></div>
+      </div>
+      <label for="a-cur">Current password <em>(required to save)</em></label>
+      <input id="a-cur" name="current" type="password" required autocomplete="current-password">
+      <button class="btn" type="submit">Save account</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

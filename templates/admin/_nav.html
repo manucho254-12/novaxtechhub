@@ -1,0 +1,10 @@
+<nav class="jump admin-tabs" aria-label="Admin sections">
+  <a href="{{ url_for('admin_dashboard') }}" class="{{ 'on' if admin_active == 'docs' }}">Documents</a>
+  <a href="{{ url_for('admin_legal') }}" class="{{ 'on' if admin_active == 'legal' }}">Legal</a>
+  <a href="{{ url_for('admin_passwords') }}" class="{{ 'on' if admin_active == 'passwords' }}">Password Manager</a>
+  <a href="{{ url_for('admin_tabs') }}" class="{{ 'on' if admin_active == 'tabs' }}">Tabs</a>
+  <a href="{{ url_for('admin_projects') }}" class="{{ 'on' if admin_active == 'projects' }}">Projects</a>
+  <a href="{{ url_for('admin_stack') }}" class="{{ 'on' if admin_active == 'stack' }}">Stack</a>
+  <a href="{{ url_for('admin_dashboard') }}#images">Site images</a>
+  <a href="{{ url_for('admin_dashboard') }}#account">Account</a>
+</nav>

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Document unavailable | Novax Tech Hub{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="wrap narrow empty-state">
+    <h1 class="h2">This document is not available</h1>
+    <p>It may have been turned off or removed. Ask Novax Tech Hub if you still need access.</p>
+    <div class="actions">
+      <a class="btn" href="{{ url_for('docs') }}">Back to library</a>
+      <a class="btn btn-ghost" href="https://wa.me/{{ site.whatsapp }}">Message Novax Tech Hub</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

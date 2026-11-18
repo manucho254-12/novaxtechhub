@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Stack | Admin | Novax Tech Hub{% endblock %}
+{% block content %}
+<section class="page-head admin-head">
+  <div class="wrap row-between">
+    <div>
+      <h1>Stack</h1>
+      <p class="lead sm">Edit the Stack section: its heading and text, the groups (Frontend, Backend…) and the tools inside each one.</p>
+      {% include "admin/_nav.html" %}
+    </div>
+    <form method="post" action="{{ url_for('admin_logout') }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-ghost btn-sm" type="submit">Sign out</button></form>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="wrap">
+    <div class="admin-grid">
+      <div>
+        <form class="panel" method="post" action="{{ url_for('admin_stack_settings') }}">
+          <h2 class="h3">Section text</h2>
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+          <label for="s-h">Heading</label><input id="s-h" name="heading" maxlength="120" value="{{ cfg.heading }}" required>
+          <label for="s-i">Intro line <em>(optional)</em></label><textarea id="s-i" name="intro" rows="2" maxlength="400">{{ cfg.intro }}</textarea>
+          <label for="s-n">Note under the boxes <em>(optional)</em></label><textarea id="s-n" name="note" rows="3" maxlength="600">{{ cfg.note }}</textarea>
+          <button class="btn" type="submit">Save text</button>
+        </form>
+        <form class="panel" method="post" action="{{ url_for('admin_stack_group_new') }}" style="margin-top:1.1rem">
+          <h2 class="h3">Add a group</h2>
+          <p class="meta">A group is one box, such as Frontend, Backend, Database or Mobile.</p>
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+          <label for="g-n">Group name</label><input id="g-n" name="name" maxlength="40" required placeholder="e.g. Mobile">
+          <button class="btn" type="submit">Add group</button>
+        </form>
+      </div>
+
+      <div class="stack-admin">
+        {% for g in groups %}
+        <div class="panel group-panel">
+          <div class="group-head">
+            <h2 class="h3">{{ g.row.name }} <small>{{ g['items']|length }} {{ 'tool' if g['items']|length == 1 else 'tools' }}</small></h2>
+            <div class="a-actions nb">
+              <form method="post" action="{{ url_for('admin_stack_group_move', group_id=g.row.id) }}" class="inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="dir" value="up"><button class="btn btn-sm btn-ghost sq" type="submit" aria-label="Move group up" {{ 'disabled' if loop.first }}>↑</button></form>
+              <form method="post" action="{{ url_for('admin_stack_group_move', group_id=g.row.id) }}" class="inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="dir" value="down"><button class="btn btn-sm btn-ghost sq" type="submit" aria-label="Move group down" {{ 'disabled' if loop.last }}>↓</button></form>
+              <button class="btn btn-sm btn-ghost" type="button" data-edit="grp-{{ g.row.id }}">Rename</button>
+              <form method="post" action="{{ url_for('admin_stack_group_delete', group_id=g.row.id) }}" data-confirm="Delete the “{{ g.row.name }}” group and all its tools?"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger" type="submit">Delete</button></form>
+            </div>
+          </div>
+          <dialog id="edit-grp-{{ g.row.id }}" class="modal">
+            <form method="post" action="{{ url_for('admin_stack_group_edit', group_id=g.row.id) }}">
+              <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+              <h3 class="h3">Rename group</h3><input name="name" value="{{ g.row.name }}" maxlength="40" required>
+              <div class="actions" style="margin-top:1.1rem"><button class="btn" type="submit">Save</button><button class="btn btn-ghost" type="button" data-close>Cancel</button></div>
+            </form>
+          </dialog>
+
+          <ul class="adocs tools">
+            {% for it in g['items'] %}
+            <li class="adoc">
+              <div class="doc-main"><h3>{{ it.name }}</h3><p class="meta">{{ it.description or 'No description' }}</p></div>
+              <div class="a-actions">
+                <form method="post" action="{{ url_for('admin_stack_item_move', item_id=it.id) }}" class="inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="dir" value="up"><button class="btn btn-sm btn-ghost sq" type="submit" aria-label="Move up" {{ 'disabled' if loop.first }}>↑</button></form>
+                <form method="post" action="{{ url_for('admin_stack_item_move', item_id=it.id) }}" class="inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="dir" value="down"><button class="btn btn-sm btn-ghost sq" type="submit" aria-label="Move down" {{ 'disabled' if loop.last }}>↓</button></form>
+                <button class="btn btn-sm btn-ghost" type="button" data-edit="tool-{{ it.id }}">Edit</button>
+                <form method="post" action="{{ url_for('admin_stack_item_delete', item_id=it.id) }}" data-confirm="Remove “{{ it.name }}”?"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger" type="submit">Remove</button></form>
+              </div>
+              <dialog id="edit-tool-{{ it.id }}" class="modal">
+                <form method="post" action="{{ url_for('admin_stack_item_edit', item_id=it.id) }}">
+                  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                  <h3 class="h3">Edit tool</h3>
+                  <label>Name</label><input name="name" value="{{ it.name }}" maxlength="60" required>
+                  <label>Description</label><textarea name="description" rows="3" maxlength="300">{{ it.description }}</textarea>
+                  <div class="actions" style="margin-top:1.1rem"><button class="btn" type="submit">Save</button><button class="btn btn-ghost" type="button" data-close>Cancel</button></div>
+                </form>
+              </dialog>
+            </li>
+            {% endfor %}
+          </ul>
+          <form class="add-tool" method="post" action="{{ url_for('admin_stack_item_new', group_id=g.row.id) }}">
+            <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+            <div class="two">
+              <div><label>New tool</label><input name="name" maxlength="60" required placeholder="e.g. Laravel"></div>
+              <div><label>Description <em>(optional)</em></label><input name="description" maxlength="300" placeholder="What you use it for"></div>
+            </div>
+            <button class="btn btn-sm" type="submit">Add tool</button>
+          </form>
+        </div>
+        {% else %}
+        <div class="panel"><div class="empty-state sm"><p>No groups yet. Add your first group using the form.</p></div></div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,19 @@
+<section class="section {{ 'tint' if tint }}" id="{{ t.slug }}">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Why Novax Tech Hub exists</h2>
+      <p>Three things guide every project we take on, from a single logo to a full website build.</p>
+    </div>
+    <div class="grid g3">
+      {% for tag, title, text in c.PILLARS %}
+      <article class="box pillar">
+        <div class="box-head"><span>{{ tag }}</span></div>
+        <div class="box-body">
+          <h3>{{ title }}</h3>
+          <p>{{ text }}</p>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>

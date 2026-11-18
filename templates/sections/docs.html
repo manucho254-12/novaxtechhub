@@ -1,0 +1,57 @@
+<section class="section {{ 'tint' if tint }}" id="{{ t.slug }}">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Docs library</h2>
+      <p>Protected documents shared with specific people. Choose a document and enter the password you were given. Don't have one? <a href="https://wa.me/{{ site.whatsapp }}?text={{ 'Hi Novax Tech Hub, I need access to a document.'|urlencode }}">Ask on WhatsApp</a>.</p>
+    </div>
+    {% with msgs = get_flashed_messages(with_categories=true) %}
+      {% for cat, m in msgs %}<p class="flash {{ cat }}" role="status">{{ m }}</p>{% endfor %}
+    {% endwith %}
+    <div class="box doctable">
+      <div class="box-head"><span>Document</span><small>{{ docs|length }} available</small></div>
+      {% if docs %}
+      <ul class="doclist">
+        {% for d in docs %}
+        <li class="docrow">
+          <span class="ext {{ d.ext[1:] }}">{{ d.ext[1:]|upper }}</span>
+          <div class="doc-main">
+            <h3>{{ d.title }}</h3>
+            {% if d.description %}<p>{{ d.description }}</p>{% endif %}
+            <p class="meta">{{ d.size|filesize }} &nbsp;·&nbsp; Added {{ d.created_at|pretty_date }}</p>
+          </div>
+          <div class="row-actions">
+          <a class="btn btn-sm btn-wa" href="{{ doc_wa(d) }}" target="_blank" rel="noopener" aria-label="Share {{ d.title }} on WhatsApp" title="Share on WhatsApp">{% include "_wa_icon.html" %}<span>Share</span></a>
+          <button class="btn btn-sm btn-dark" type="button" data-open="unlock-{{ d.id }}">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            Unlock
+          </button>
+          </div>
+          <dialog id="unlock-{{ d.id }}" class="modal">
+            <form method="post" action="{{ url_for('doc_unlock', doc_id=d.id) }}">
+              <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+              <input type="hidden" name="from" value="home">
+              <h3 class="h3">Unlock “{{ d.title }}”</h3>
+              <label for="upw-{{ d.id }}">Document password</label>
+              <div class="pw-field">
+                <input id="upw-{{ d.id }}" name="password" type="password" autocomplete="off" required placeholder="Enter the password you were given">
+                <button type="button" class="ghost-icon" data-toggle-pw="#upw-{{ d.id }}">Show</button>
+              </div>
+              <div class="actions" style="margin-top:1.2rem">
+                <button class="btn" type="submit">Unlock document</button>
+                <button class="btn btn-ghost" type="button" data-close>Cancel</button>
+              </div>
+            </form>
+          </dialog>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="box-body empty-state flat">
+        <h3>No documents are published right now</h3>
+        <p>New files appear here when they are shared. Message us on WhatsApp if you are expecting one.</p>
+        <a class="btn" href="https://wa.me/{{ site.whatsapp }}">Message Novax Tech Hub</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>

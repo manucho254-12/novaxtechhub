@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{{ doc.title }} | Docs | Novax Tech Hub{% endblock %}
+{% block content %}
+<section class="section tight">
+  <div class="wrap narrow">
+    <a class="back" href="{{ url_for('index') }}{{ '#top' if is_legal else '#docs' }}">{{ 'Back to site' if is_legal else 'Back to library' }}</a>
+    <div class="doc-head">
+      <span class="ext {{ doc.ext[1:] }}">{{ type_label }}</span>
+      <div>
+        {% if is_legal %}<p class="status">{{ 'Confidential legal document' if doc.protected else 'Legal document' }}</p>{% endif %}
+        <h1 class="h2">{{ doc.title }}</h1>
+        {% if doc.description %}<p class="lead sm">{{ doc.description }}</p>{% endif %}
+        <p class="meta">{{ doc.size|filesize }} &nbsp;·&nbsp; Added {{ doc.created_at|pretty_date }}</p>
+      </div>
+    </div>
+
+    {% if unlocked %}
+      <div class="unlocked">
+        <p class="ok-line">{% if not doc.protected %}This document is open to everyone.{% elif is_legal %}Unlocked. For security this document locks itself again after {{ legal_minutes }} minutes.{% else %}Unlocked. You can open this document for as long as this session lasts.{% endif %}</p>
+        <div class="actions">
+          {% if doc.ext == '.pdf' %}
+          <a class="btn" href="{{ url_for('doc_file', doc_id=doc.id) }}" target="_blank" rel="noopener">Open in new tab</a>
+          {% if not is_legal %}<a class="btn btn-ghost" href="{{ url_for('doc_file', doc_id=doc.id, download=1) }}">Download PDF</a>{% endif %}
+          {% else %}
+          <a class="btn" href="{{ url_for('doc_file', doc_id=doc.id) }}">Download {{ type_label }}</a>
+          {% endif %}
+          {% if doc.protected %}
+          <form method="post" action="{{ url_for('doc_lock', doc_id=doc.id) }}">
+            <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+            <button class="btn btn-ghost" type="submit">Lock again</button>
+          </form>
+          {% endif %}
+          <a class="btn btn-wa" href="{{ share_url }}" target="_blank" rel="noopener">{% include "_wa_icon.html" %}Share on WhatsApp</a>
+        </div>
+        {% if doc.ext == '.pdf' %}
+        <iframe class="viewer" src="{{ url_for('doc_file', doc_id=doc.id) }}#toolbar=1" title="{{ doc.title }}"></iframe>
+        {% else %}
+        <p class="note">Word files can't be previewed in the browser, so download it to read it.</p>
+        {% endif %}
+      </div>
+    {% else %}
+      <form class="unlock" method="post" action="{{ url_for('doc_unlock', doc_id=doc.id) }}">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <label for="pw">Document password</label>
+        <div class="pw-field">
+          <input id="pw" name="password" type="password" autocomplete="off" required autofocus placeholder="Enter the password you were given">
+          <button type="button" class="ghost-icon" data-toggle-pw="#pw">Show</button>
+        </div>
+        {% if is_legal %}<p class="meta">This is a protected company document. Four wrong attempts pause access for fifteen minutes.</p>{% endif %}
+        <div class="actions">
+          <button class="btn" type="submit">Unlock document</button>
+          <a class="btn btn-wa" href="{{ share_url }}" target="_blank" rel="noopener">{% include "_wa_icon.html" %}Share on WhatsApp</a>
+        </div>
+      </form>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,17 @@
+<section class="section {{ 'tint' if tint }}" id="{{ t.slug }}">
+  <div class="wrap split">
+    <div class="section-head">
+      <h2>Core competencies</h2>
+      <p>What we bring to every engagement, sharpened through real client work.</p>
+      {% set pf = media('profile') %}{% if pf %}<img class="portrait" src="{{ pf }}" alt="Portrait of Manucho, founder of Novax Tech Hub" width="320" height="320" loading="lazy">{% endif %}
+    </div>
+    <ul class="grid g2 skills">
+      {% for name, pct in c.SKILLS %}
+      <li class="box skill">
+        <div class="skill-row"><span>{{ name }}</span><b>{{ pct }}%</b></div>
+        <div class="bar" role="progressbar" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100" aria-label="{{ name }}"><i style="--w: {{ pct }}%"></i></div>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>

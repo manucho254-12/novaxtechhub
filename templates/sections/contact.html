@@ -1,0 +1,18 @@
+<section class="section {{ 'tint' if tint }}" id="{{ t.slug }}">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Let's start your project</h2>
+      <p>Pick whichever channel works best for you. We usually reply within a day.</p>
+    </div>
+    <div class="grid g2">
+      <a class="box contact" href="https://wa.me/{{ site.whatsapp }}">
+        <div class="box-head"><span>WhatsApp</span></div>
+        <div class="box-body"><b>{{ site.whatsapp_display }}</b><small>Chat with us directly for quick replies.</small></div>
+      </a>
+      <a class="box contact" href="mailto:{{ site.email }}">
+        <div class="box-head"><span>Email</span></div>
+        <div class="box-body"><b>{{ site.email }}</b><small>Best for detailed or professional inquiries.</small></div>
+      </a>
+    </div>
+  </div>
+</section>

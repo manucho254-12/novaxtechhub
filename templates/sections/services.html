@@ -1,0 +1,32 @@
+<section class="section {{ 'tint' if tint }}" id="{{ t.slug }}">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>What we can build for you</h2>
+      <p>Tell us what you need. Each service lists what we usually ask for to get started.</p>
+    </div>
+    <div class="grid g4 services">
+      {% for title, text, needs in c.SERVICES %}
+      <article class="box service">
+        <div class="box-head"><h3>{{ title }}</h3></div>
+        <div class="box-body">
+          <p>{{ text }}</p>
+          <p class="s-label">What we'll need</p>
+          <ul>{% for n in needs %}<li>{{ n }}</li>{% endfor %}</ul>
+        </div>
+        <div class="box-foot">
+          <a class="btn btn-sm btn-ghost" href="https://wa.me/{{ site.whatsapp }}?text={{ ('Hi Novax Tech Hub, I would like ' ~ title|lower ~ '.')|urlencode }}">Ask about this</a>
+        </div>
+      </article>
+      {% endfor %}
+      <article class="box service cta">
+        <div class="box-body">
+          <h3>Something else in mind?</h3>
+          <p>Describe your idea and we'll tell you honestly how we can help, and what it would take.</p>
+        </div>
+        <div class="box-foot">
+          <a class="btn btn-sm" href="https://wa.me/{{ site.whatsapp }}">Start a conversation</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>

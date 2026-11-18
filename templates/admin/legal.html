@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Legal | Admin | Novax Tech Hub{% endblock %}
+{% block content %}
+<section class="page-head admin-head">
+  <div class="wrap row-between">
+    <div>
+      <h1>Legal documents</h1>
+      <p class="lead sm">Company terms, policies and contracts, shown as links in the site footer. Terms and policies can be password protected or left open; contracts always need a password.</p>
+      {% include "admin/_nav.html" %}
+    </div>
+    <form method="post" action="{{ url_for('admin_logout') }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-ghost btn-sm" type="submit">Sign out</button></form>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="wrap">
+    {% include "admin/_reveal.html" %}
+    <p class="flash warn">Protected legal files: PDF only, passwords of {{ min_pw }}+ characters, access pauses for 15 minutes after 4 wrong attempts, and each document locks itself again {{ ttl }} minutes after it is opened. Visitors see the titles in the footer, but nothing inside a protected document without its password. Open documents (terms and policies only) can be read by anyone with the link. Passwords you set are kept encrypted in the <a href="{{ url_for('admin_passwords') }}">Password Manager</a>.</p>
+    <div class="admin-grid">
+      <form class="panel" method="post" action="{{ url_for('admin_legal_upload') }}" enctype="multipart/form-data" id="upload" data-legal-form data-required-kinds="{{ required_kinds|join(',') }}">
+        <h2 class="h3">Upload a legal document</h2>
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <label for="l-title">Title</label>
+        <input id="l-title" name="title" maxlength="140" required placeholder="e.g. Website development agreement">
+        <label for="l-kind">Type <em>(decides the footer heading)</em></label>
+        <select id="l-kind" name="legal_kind" required data-legal-kind>
+          {% for key, label in kinds %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+        </select>
+        <label for="l-desc">Short note <em>(optional, internal)</em></label>
+        <input id="l-desc" name="description" maxlength="400" placeholder="Version, date or who it applies to">
+        <label for="file">PDF file <em>(up to 25 MB)</em></label>
+        <label class="drop" for="file"><span data-file-name>Choose a PDF</span></label>
+        <input id="file" name="file" type="file" accept=".pdf" required class="sr">
+        <label for="l-protect">Access</label>
+        <select id="l-protect" name="protect" data-legal-protect>
+          <option value="1" selected>Password protected</option>
+          <option value="0" data-open-option>Open (no password)</option>
+        </select>
+        <p class="meta" data-contract-note hidden>Contracts must always have a password.</p>
+        <div data-pw-block>
+          <label for="l-pw">Password <em>({{ min_pw }}+ characters)</em></label>
+          <div class="pw-field">
+            <input id="l-pw" name="password" type="text" minlength="{{ min_pw }}" required autocomplete="off" placeholder="At least {{ min_pw }} characters">
+            <button type="button" class="ghost-icon" data-generate="#l-pw" data-length="14">Generate</button>
+          </div>
+        </div>
+        <label class="check"><input type="checkbox" name="enabled" value="1" checked> Show it in the footer now</label>
+        <button class="btn" type="submit">Upload document</button>
+      </form>
+
+      <div class="panel" id="library">
+        <h2 class="h3">Legal library</h2>
+        {% if docs %}
+        <ul class="adocs">
+          {% for d in docs %}
+          <li class="adoc {{ '' if d.enabled else 'off' }}">
+            <span class="ext pdf">PDF</span>
+            <div class="doc-main">
+              <h3>{{ d.title }}</h3>
+              <p class="meta">{{ kind_labels.get(d.legal_kind, 'Legal') }} &nbsp;·&nbsp; {{ d.size|filesize }} &nbsp;·&nbsp; {{ d.views }} views &nbsp;·&nbsp; {{ d.created_at|pretty_date }}</p>
+              <p class="meta"><span class="pill {{ 'locked' if d.protected else 'open' }}">{{ 'Password protected' if d.protected else 'Open to everyone' }}</span></p>
+              <p class="meta"><a href="{{ url_for('doc_page', doc_id=d.id) }}" target="_blank" rel="noopener">/docs/{{ d.id }}</a> &nbsp;·&nbsp; {{ 'In footer' if d.enabled else 'Hidden' }}</p>
+            </div>
+            <div class="a-actions">
+              <form method="post" action="{{ url_for('admin_toggle', doc_id=d.id) }}">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                <button class="switch {{ 'on' if d.enabled }}" role="switch" aria-checked="{{ 'true' if d.enabled else 'false' }}" title="{{ 'Hide from' if d.enabled else 'Show in' }} footer" type="submit"><i></i><span class="sr">{{ 'Hide' if d.enabled else 'Show' }}</span></button>
+              </form>
+              <a class="btn btn-sm btn-wa" target="_blank" rel="noopener" href="{{ share_link(d) }}">{% include "_wa_icon.html" %}Share</a>
+              <button class="btn btn-sm btn-ghost" type="button" data-edit="{{ d.id }}">Edit</button>
+              <form method="post" action="{{ url_for('admin_delete', doc_id=d.id) }}" data-confirm="Delete “{{ d.title }}” and its file permanently?">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger" type="submit">Delete</button>
+              </form>
+            </div>
+            <dialog id="edit-{{ d.id }}" class="modal">
+              <form method="post" action="{{ url_for('admin_edit', doc_id=d.id) }}" data-legal-edit data-protected="{{ 1 if d.protected else 0 }}" data-required-kinds="{{ required_kinds|join(',') }}">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                <h3 class="h3">Edit legal document</h3>
+                <label>Title</label><input name="title" value="{{ d.title }}" maxlength="140" required>
+                <label>Type</label>
+                <select name="legal_kind" data-legal-kind>{% for key, label in kinds %}<option value="{{ key }}" {{ 'selected' if d.legal_kind == key }}>{{ label }}</option>{% endfor %}</select>
+                <label>Short note</label><input name="description" value="{{ d.description }}" maxlength="400">
+                <label>{{ 'New password' if d.protected else 'Add a password' }} <em>({{ 'leave blank to keep the current one' if d.protected else 'optional for terms and policies' }})</em></label>
+                <div class="pw-field">
+                  <input name="password" type="text" minlength="{{ min_pw }}" autocomplete="off" id="np-{{ d.id }}" data-new-pw>
+                  <button type="button" class="ghost-icon" data-generate="#np-{{ d.id }}" data-length="14">Generate</button>
+                </div>
+                {% if d.protected %}
+                <label class="check" data-remove-pw><input type="checkbox" name="remove_password" value="1"> Remove the password (make it open to everyone)</label>
+                {% endif %}
+                <p class="meta" data-contract-note hidden>Contracts must always have a password.</p>
+                <p class="meta">Changing or removing the password locks the document for everyone who had it open.</p>
+                <div class="actions"><button class="btn" type="submit">Save changes</button><button class="btn btn-ghost" type="button" data-close>Cancel</button></div>
+              </form>
+            </dialog>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}<div class="empty-state sm"><p>No legal documents yet. Upload your terms, policies or contracts using the form.</p></div>{% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

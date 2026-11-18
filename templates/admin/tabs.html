@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Tabs | Admin | Novax Tech Hub{% endblock %}
+{% block content %}
+<section class="page-head admin-head">
+  <div class="wrap row-between">
+    <div>
+      <h1>Tabs</h1>
+      <p class="lead sm">Choose which tabs visitors see, change their order, and add your own.</p>
+      {% include "admin/_nav.html" %}
+    </div>
+    <form method="post" action="{{ url_for('admin_logout') }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-ghost btn-sm" type="submit">Sign out</button></form>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="wrap">
+    <div class="admin-grid">
+      <form class="panel" method="post" action="{{ url_for('admin_tab_new') }}" enctype="multipart/form-data" id="new-tab">
+        <h2 class="h3">Add a new tab</h2>
+        <p class="meta">A tab adds a menu link and a section on the home page. After adding it, use <strong>Items</strong> to put members, photos or cards inside, each with its own optional image and description.</p>
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <label for="t-title">Tab title <em>(menu label)</em></label>
+        <input id="t-title" name="title" maxlength="40" required placeholder="e.g. Pricing, Team, FAQ">
+        <label for="t-body">Intro content <em>(optional)</em></label>
+        <textarea id="t-body" name="body" rows="8" placeholder="Write your content here.&#10;&#10;## A subheading&#10;A paragraph with **bold** text and a [link](https://example.com).&#10;&#10;- A bullet&#10;- Another bullet"></textarea>
+        <p class="meta">Formatting: blank line = new paragraph, <code>## </code> subheading, <code>- </code> bullets, <code>**bold**</code>, <code>[text](https://link)</code>.</p>
+        <label for="t-img">Image <em>(optional, PNG/JPG/WEBP up to 5 MB)</em></label>
+        <input id="t-img" name="image" type="file" accept=".png,.jpg,.jpeg,.webp">
+        <div class="two">
+          <div><label for="t-bl">Button text <em>(optional)</em></label><input id="t-bl" name="button_label" maxlength="40" placeholder="Get a quote"></div>
+          <div><label for="t-bu">Button link <em>(optional)</em></label><input id="t-bu" name="button_url" placeholder="https://… or mailto:…"></div>
+        </div>
+        <label class="check"><input type="checkbox" name="enabled" value="1" checked> Show it to visitors now</label>
+        <button class="btn" type="submit">Add tab</button>
+      </form>
+
+      <div class="panel">
+        <h2 class="h3">Menu order</h2>
+        <p class="meta">Top to bottom is left to right in the menu and down the page. Switch a tab off to hide it from visitors.</p>
+        <ul class="adocs tablist">
+          {% for t in tabs %}
+          <li class="adoc {{ '' if t.enabled else 'off' }}">
+            <span class="ext tabbadge {{ 'custom' if t.kind == 'custom' }}">{{ loop.index }}</span>
+            <div class="doc-main">
+              <h3>{{ t.title }}</h3>
+              <p class="meta">{{ 'Built-in' if t.kind == 'builtin' else 'Custom tab' }} &nbsp;·&nbsp; /#{{ t.slug }} &nbsp;·&nbsp; {{ 'Visible' if t.enabled else 'Hidden' }}</p>
+            </div>
+            <div class="a-actions">
+              <form method="post" action="{{ url_for('admin_tab_toggle', tab_id=t.id) }}">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                <button class="switch {{ 'on' if t.enabled }}" role="switch" aria-checked="{{ 'true' if t.enabled else 'false' }}" title="{{ 'Hide' if t.enabled else 'Show' }} this tab" type="submit"><i></i><span class="sr">{{ 'Hide' if t.enabled else 'Show' }}</span></button>
+              </form>
+              <form method="post" action="{{ url_for('admin_tab_move', tab_id=t.id) }}" class="inline">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="dir" value="up">
+                <button class="btn btn-sm btn-ghost sq" type="submit" aria-label="Move {{ t.title }} up" {{ 'disabled' if loop.first }}>↑</button>
+              </form>
+              <form method="post" action="{{ url_for('admin_tab_move', tab_id=t.id) }}" class="inline">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="dir" value="down">
+                <button class="btn btn-sm btn-ghost sq" type="submit" aria-label="Move {{ t.title }} down" {{ 'disabled' if loop.last }}>↓</button>
+              </form>
+              {% if t.kind == 'custom' %}<a class="btn btn-sm" href="{{ url_for('admin_tab_items', tab_id=t.id) }}">Items ({{ counts.get(t.id, 0) }})</a>{% endif %}
+              <button class="btn btn-sm btn-ghost" type="button" data-edit="tab-{{ t.id }}">Edit</button>
+              {% if t.kind == 'custom' %}
+              <form method="post" action="{{ url_for('admin_tab_delete', tab_id=t.id) }}" data-confirm="Delete the “{{ t.title }}” tab permanently?">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+              </form>
+              {% endif %}
+            </div>
+
+            <dialog id="edit-tab-{{ t.id }}" class="modal modal-wide">
+              <form method="post" action="{{ url_for('admin_tab_edit', tab_id=t.id) }}" enctype="multipart/form-data">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                <h3 class="h3">Edit {{ 'menu label' if t.kind == 'builtin' else 'tab' }}</h3>
+                <label>Title <em>(menu label)</em></label>
+                <input name="title" value="{{ t.title }}" maxlength="40" required>
+                {% if t.kind == 'custom' %}
+                <label>Intro content <em>(optional)</em></label>
+                <textarea name="body" rows="9">{{ t.body }}</textarea>
+                <label>Image <em>(upload to replace)</em></label>
+                {% if t.image %}<img class="mini" src="{{ url_for('media_file', filename=t.image) }}" alt="">
+                <label class="check"><input type="checkbox" name="remove_image" value="1"> Remove current image</label>{% endif %}
+                <input name="image" type="file" accept=".png,.jpg,.jpeg,.webp">
+                <div class="two">
+                  <div><label>Button text</label><input name="button_label" value="{{ t.button_label }}" maxlength="40"></div>
+                  <div><label>Button link</label><input name="button_url" value="{{ t.button_url }}"></div>
+                </div>
+                {% else %}
+                <p class="meta">Built-in tabs keep their layout. You can rename the menu label, reorder them and hide them.</p>
+                {% endif %}
+                <div class="actions" style="margin-top:1.1rem">
+                  <button class="btn" type="submit">Save changes</button>
+                  <button class="btn btn-ghost" type="button" data-close>Cancel</button>
+                </div>
+              </form>
+            </dialog>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Docs | Novax Tech Hub{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div class="wrap">
+    <h1>Docs library</h1>
+    <p class="lead">Protected documents shared with specific people. Pick a document and enter the password you were given. Don't have one? <a href="https://wa.me/{{ site.whatsapp }}?text={{ 'Hi Novax Tech Hub, I need access to a document.'|urlencode }}">Ask Novax Tech Hub on WhatsApp</a>.</p>
+  </div>
+</section>
+<section class="section tight">
+  <div class="wrap">
+    {% if docs %}
+    <ul class="doclist">
+      {% for d in docs %}
+      <li class="docrow">
+        <span class="ext {{ d.ext[1:] }}">{{ d.ext[1:]|upper }}</span>
+        <div class="doc-main">
+          <h3>{{ d.title }}</h3>
+          {% if d.description %}<p>{{ d.description }}</p>{% endif %}
+          <p class="meta">{{ d.size|filesize }} &nbsp;·&nbsp; Added {{ d.created_at|pretty_date }}</p>
+        </div>
+        <div class="row-actions">
+        <a class="btn btn-sm btn-wa" href="{{ doc_wa(d) }}" target="_blank" rel="noopener" aria-label="Share {{ d.title }} on WhatsApp" title="Share on WhatsApp">{% include "_wa_icon.html" %}<span>Share</span></a>
+        <a class="btn btn-sm btn-dark" href="{{ url_for('doc_page', doc_id=d.id) }}">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          Unlock
+        </a>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty-state">
+      <h2>No documents are published right now</h2>
+      <p>New files appear here when they are shared. Message me on WhatsApp if you are expecting one.</p>
+      <a class="btn" href="https://wa.me/{{ site.whatsapp }}">Message Novax Tech Hub</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

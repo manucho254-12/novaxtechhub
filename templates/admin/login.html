@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Admin sign in | Novax Tech Hub{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="wrap login-wrap">
+    <form class="panel login" method="post" autocomplete="on">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <h1 class="h2">Admin sign in</h1>
+      <p class="lead sm">Manage the docs library.</p>
+      <label for="u">Username</label>
+      <input id="u" name="username" required autofocus autocomplete="username">
+      <label for="p">Password</label>
+      <div class="pw-field">
+        <input id="p" name="password" type="password" required autocomplete="current-password">
+        <button type="button" class="ghost-icon" data-toggle-pw="#p">Show</button>
+      </div>
+      <button class="btn" type="submit">Sign in</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Projects | Admin | Novax Tech Hub{% endblock %}
+{% block content %}
+<section class="page-head admin-head">
+  <div class="wrap row-between">
+    <div>
+      <h1>Projects</h1>
+      <p class="lead sm">Add the work you've built. Each project can have a screenshot, domain, details and contributors.</p>
+      {% include "admin/_nav.html" %}
+    </div>
+    <form method="post" action="{{ url_for('admin_logout') }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-ghost btn-sm" type="submit">Sign out</button></form>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="wrap">
+    {% macro fields(p=None) %}
+      <fieldset class="hosting">
+        <legend>Is this project hosted yet?</legend>
+        <label class="radio"><input type="radio" name="hosting" value="hosted" {{ 'checked' if not p or p.hosting != 'pending' }}> Yes, it has a domain and is online</label>
+        <label class="radio"><input type="radio" name="hosting" value="pending" {{ 'checked' if p and p.hosting == 'pending' }}> Not yet. It is fully developed but has no hosting or domain</label>
+      </fieldset>
+      <label>Project title</label>
+      <input name="title" maxlength="100" required value="{{ p.title if p else '' }}" placeholder="e.g. Step In Kicks">
+      <div class="two">
+        <div class="domain-field"><label>Domain name <em>(or full link)</em></label><input name="domain" value="{{ p.domain if p else '' }}" placeholder="example.com"></div>
+        <div><label>Status</label><input name="status" list="status-list" maxlength="40" value="{{ p.status if p else 'Live' }}"></div>
+      </div>
+      <label>Short description <em>(shown on the card)</em></label>
+      <input name="description" maxlength="400" required value="{{ p.description if p else '' }}" placeholder="One or two sentences about the project">
+      <label>Information <em>(optional, opens under “Details”)</em></label>
+      <textarea name="details" rows="6" placeholder="Goals, features, technologies used, results…">{{ p.details if p else '' }}</textarea>
+      <label>Contributors <em>(separate names with commas)</em></label>
+      <input name="contributors" maxlength="300" value="{{ p.contributors if p else '' }}" placeholder="Manucho, Jane Wanjiku">
+    {% endmacro %}
+    <datalist id="status-list">{% for s in statuses %}<option value="{{ s }}">{% endfor %}</datalist>
+
+    <div class="admin-grid">
+      <form class="panel" method="post" action="{{ url_for('admin_project_new') }}" enctype="multipart/form-data" id="new-project">
+        <h2 class="h3">Add a project</h2>
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        {{ fields() }}
+        <label>Screenshot <em>(optional, PNG/JPG/WEBP up to 5 MB, 16:9 looks best)</em></label>
+        <input name="image" type="file" accept=".png,.jpg,.jpeg,.webp">
+        <label class="check"><input type="checkbox" name="enabled" value="1" checked> Show it to visitors now</label>
+        <button class="btn" type="submit">Add project</button>
+      </form>
+
+      <div class="panel">
+        <h2 class="h3">All projects</h2>
+        <p class="meta">Order here is the order on the site. Switch a project off to hide it.</p>
+        {% if projects %}
+        <ul class="adocs tablist">
+          {% for p in projects %}
+          <li class="adoc {{ '' if p.enabled else 'off' }}">
+            {% if p.image %}<img class="proj-thumb" src="{{ url_for('media_file', filename=p.image) }}" alt="">{% else %}<span class="ext tabbadge">{{ p.title[:1] }}</span>{% endif %}
+            <div class="doc-main">
+              <h3>{{ p.title }}</h3>
+              <p class="meta">{{ p.status }}{% if p.domain %} &nbsp;·&nbsp; {{ p.domain|host }}{% endif %} &nbsp;·&nbsp; {{ 'Visible' if p.enabled else 'Hidden' }}</p>
+            </div>
+            <div class="a-actions">
+              <form method="post" action="{{ url_for('admin_project_toggle', project_id=p.id) }}">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                <button class="switch {{ 'on' if p.enabled }}" role="switch" aria-checked="{{ 'true' if p.enabled else 'false' }}" title="{{ 'Hide' if p.enabled else 'Show' }} this project" type="submit"><i></i><span class="sr">{{ 'Hide' if p.enabled else 'Show' }}</span></button>
+              </form>
+              <form method="post" action="{{ url_for('admin_project_move', project_id=p.id) }}" class="inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="dir" value="up"><button class="btn btn-sm btn-ghost sq" type="submit" aria-label="Move up" {{ 'disabled' if loop.first }}>↑</button></form>
+              <form method="post" action="{{ url_for('admin_project_move', project_id=p.id) }}" class="inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="dir" value="down"><button class="btn btn-sm btn-ghost sq" type="submit" aria-label="Move down" {{ 'disabled' if loop.last }}>↓</button></form>
+              <button class="btn btn-sm btn-ghost" type="button" data-edit="proj-{{ p.id }}">Edit</button>
+              <form method="post" action="{{ url_for('admin_project_delete', project_id=p.id) }}" data-confirm="Delete “{{ p.title }}” permanently?">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger" type="submit">Delete</button>
+              </form>
+            </div>
+            <dialog id="edit-proj-{{ p.id }}" class="modal modal-wide">
+              <form method="post" action="{{ url_for('admin_project_edit', project_id=p.id) }}" enctype="multipart/form-data">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                <h3 class="h3">Edit project</h3>
+                {{ fields(p) }}
+                <label>Screenshot <em>(upload to replace)</em></label>
+                {% if p.image %}<img class="mini" src="{{ url_for('media_file', filename=p.image) }}" alt="">
+                <label class="check"><input type="checkbox" name="remove_image" value="1"> Remove current screenshot</label>{% endif %}
+                <input name="image" type="file" accept=".png,.jpg,.jpeg,.webp">
+                <div class="actions" style="margin-top:1.1rem"><button class="btn" type="submit">Save changes</button><button class="btn btn-ghost" type="button" data-close>Cancel</button></div>
+              </form>
+            </dialog>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}<div class="empty-state sm"><p>No projects yet. Add your first one using the form.</p></div>{% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

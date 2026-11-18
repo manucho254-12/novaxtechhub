@@ -1,0 +1,19 @@
+<section class="section {{ 'tint' if tint }}" id="{{ t.slug }}">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>{{ stack_cfg.heading }}</h2>
+      {% if stack_cfg.intro %}<p>{{ stack_cfg.intro }}</p>{% endif %}
+    </div>
+    {% if stack_groups %}
+    <div class="grid g3">
+      {% for g in stack_groups %}
+      <article class="box stack-col">
+        <div class="box-head"><h3>{{ g.name }}</h3><small>{{ g["items"]|length }} {{ 'tool' if g["items"]|length == 1 else 'tools' }}</small></div>
+        <dl>{% for it in g["items"] %}<div class="tool"><dt>{{ it.name }}</dt>{% if it.description %}<dd>{{ it.description }}</dd>{% endif %}</div>{% endfor %}</dl>
+      </article>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if stack_cfg.note %}<p class="note">{{ stack_cfg.note }}</p>{% endif %}
+  </div>
+</section>

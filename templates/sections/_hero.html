@@ -1,0 +1,26 @@
+<section class="hero" id="home">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="kicker">Powering Beyond Limits</p>
+      <h1>Digital solutions that keep people, businesses and ideas connected.</h1>
+      <p class="lead">I'm Manucho, founder of Novax Tech Hub. We design and build websites, brands and digital systems for businesses, churches, schools and organisations across Kenya, backed by hands-on networking and IT support.</p>
+      <div class="actions">
+        <a class="btn" href="{{ '#contact' if tab_on('contact') else 'https://wa.me/' ~ site.whatsapp }}">Hire me</a>
+        {% if tab_on('projects') %}<a class="btn btn-ghost" href="#projects">View projects</a>{% endif %}
+      </div>
+      <ul class="facts">
+        <li class="box"><b>{{ live_count }}</b><span>Live sites</span></li>
+        <li class="box"><b>{{ c.SERVICES|length }}</b><span>Services</span></li>
+        <li class="box"><b>24h</b><span>Reply time</span></li>
+      </ul>
+    </div>
+
+    <figure class="hero-art box hero-photo" aria-label="A developer working on a laptop at Novax Tech Hub">
+      <img src="{{ media('hero') or url_for('static', filename='img/hero.jpg') }}" alt="A web developer working on a laptop in front of a screen of code" width="780" height="732" fetchpriority="high" decoding="async">
+      <figcaption>
+        <img class="badge-logo" src="{{ media('logo') or url_for('static', filename='img/logo.png') }}" alt="" width="40" height="40">
+        <span><strong>Novax Tech Hub</strong><small>Powering Beyond Limits</small></span>
+      </figcaption>
+    </figure>
+  </div>
+</section>

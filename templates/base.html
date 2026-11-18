@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block title %}Novax Tech Hub | Web Development, Design & ICT Services in Kenya{% endblock %}</title>
+  <meta name="description" content="{% block desc %}Novax Tech Hub, Powering Beyond Limits: web development, graphic design, networking and computer maintenance services in Kenya.{% endblock %}">
+  <meta name="color-scheme" content="light dark">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('theme');
+        if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="{{ media('logo') or url_for('static', filename='img/favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="nav" id="top">
+  <div class="wrap nav-inner">
+    <a class="brand" href="{{ url_for('index') }}#top" aria-label="Novax Tech Hub home">
+      <img src="{{ media('logo') or url_for('static', filename='img/logo.png') }}" alt="" width="40" height="40">
+      <span><strong>Novax Tech Hub</strong><small>Powering Beyond Limits</small></span>
+    </a>
+    <nav id="menu" class="menu" aria-label="Main">
+      {% for tab in nav_tabs() %}
+      <a href="{{ url_for('index') }}#{{ tab.slug }}" class="{{ 'on' if active == 'docs' and tab.slug == 'docs' }}">{{ tab.title }}</a>
+      {% endfor %}
+      <a href="{{ url_for('index') ~ '#contact' if tab_on('contact') else 'https://wa.me/' ~ site.whatsapp }}" class="btn btn-sm">Hire me</a>
+    </nav>
+    <div class="nav-tools">
+      <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark mode" title="Switch theme">
+        <svg class="i-moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        <svg class="i-sun" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  {% block flashes %}
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}<div class="wrap flashes">{% for cat, m in msgs %}<p class="flash {{ cat }}" role="status">{{ m }}</p>{% endfor %}</div>{% endif %}
+  {% endwith %}
+  {% endblock %}
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+  <div class="wrap foot-grid {{ 'has-legal' if legal_groups() }}">
+    <div class="foot-brand">
+      <a class="brand" href="{{ url_for('index') }}#top" aria-label="Novax Tech Hub home">
+        <img src="{{ media('logo') or url_for('static', filename='img/logo.png') }}" alt="" width="40" height="40">
+        <span><strong>Novax Tech Hub</strong><small>Powering Beyond Limits</small></span>
+      </a>
+      <p>Web development, design and ICT services for businesses, churches, schools and organisations in Kenya.</p>
+      <p class="foot-contact"><a href="https://wa.me/{{ site.whatsapp }}">WhatsApp</a> &nbsp;·&nbsp; <a href="mailto:{{ site.email }}">Email</a></p>
+      <p class="foot-contact"><a class="share-site" href="{{ site_wa() }}" target="_blank" rel="noopener">{% include "_wa_icon.html" %}Share this site on WhatsApp</a></p>
+    </div>
+    <nav class="foot-col" aria-label="Explore">
+      <h3>Explore</h3>
+      <ul>{% for tab in nav_tabs() %}<li><a href="{{ url_for('index') }}#{{ tab.slug }}">{{ tab.title }}</a></li>{% endfor %}</ul>
+    </nav>
+    {% set lg = legal_groups() %}
+    {% if lg %}
+    <nav class="foot-col foot-legal" aria-label="Legal and policies">
+      <h3>Legal &amp; policies</h3>
+      {% for label, items in lg %}
+      <p class="foot-sub">{{ label }}</p>
+      <ul>{% for d in items %}
+        <li><a href="{{ url_for('doc_page', doc_id=d.id) }}">{% if d.protected %}<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>{% else %}<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 3h7l5 5v13H7z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M14 3v5h5" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>{% endif %}{{ d.title }}</a></li>
+      {% endfor %}</ul>
+      {% endfor %}
+      {% if any_locked_legal() %}<p class="foot-note">Padlock = password protected. Ask Novax Tech Hub for access.</p>{% endif %}
+    </nav>
+    {% endif %}
+  </div>
+  <div class="wrap foot-bar">
+    <p>© {{ now_year }} Novax Tech Hub. All rights reserved.</p>
+    <a href="{{ url_for('admin_login') }}" class="quiet">Admin</a>
+  </div>
+</footer>
+<a href="#top" class="to-top" aria-label="Back to top" hidden>
+  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</a>
+<script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+</body>
+</html>
